@@ -67,17 +67,31 @@ const GridComponent = (props) => {
   );
 };
 class Grid {
+  gameState;
+  ctx;
+  canvas;
   pos;
+  rows = 3;
+  columns = 5;
+  cellSize = 40;
+  cellWidth;
+  cellHeight;
+  gap;
   blocksArray = [];
   constructor(gameState, ctx) {
     this.gameState = gameState;
+    this.pos = gameState.grid.pos;
     this.ctx = ctx;
     this.canvas = ctx.canvas;
     this.updateCanvas();
-    this.blocksArray.push(
-      new Block(ctx, { x: 30, y: 30 }),
-      new Block(ctx, { x: 130, y: 130 })
-    );
+    this.cellWidth = this.cellSize;
+    this.cellHeight = this.cellSize * 1.1;
+    this.gap = this.cellSize * 0.2;
+    this.canvas.width =
+      this.cellWidth * this.columns + this.gap * (this.columns + 1);
+    this.canvas.height =
+      this.cellHeight * this.rows + this.gap * (this.rows + 1);
+    this.fillBlocksArray();
     this.ctx.canvas.addEventListener("click", this.onClick);
   }
   runCanvasAnimation = () => {
@@ -86,15 +100,37 @@ class Grid {
     requestAnimationFrame(this.runCanvasAnimation);
   };
   render = () => {
-    this.blocksArray.forEach((block) => block.render());
+    this.forEachBlockInArray((block) => block.render());
   };
   clear = () => {
     const { ctx, canvas } = this;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
   };
+  fillBlocksArray = () => {
+    const { ctx, rows, columns, cellWidth, cellHeight, gap } = this;
+    for (let i = 0; i < rows; i++) {
+      this.blocksArray.push([]);
+      for (let j = 0; j < columns; j++) {
+        this.blocksArray[i].push(
+          new Block(ctx, {
+            x: j * (cellWidth + gap) + cellWidth / 2 + gap,
+            y: i * (cellHeight + gap) + cellHeight / 2 + gap,
+          })
+        );
+      }
+    }
+  };
+  forEachBlockInArray = (func) => {
+    const { rows, columns } = this;
+    for (let i = 0; i < rows; i++) {
+      for (let j = 0; j < columns; j++) {
+        func(this.blocksArray[i][j]);
+      }
+    }
+  };
   onClick = (e) => {
     const { grid } = this.gameState;
-    this.blocksArray.forEach((block) => {
+    this.forEachBlockInArray((block) => {
       const mousePosOnCanvas = {
         x: e.clientX - grid.pos.x,
         y: e.clientY - grid.pos.y,
@@ -105,7 +141,7 @@ class Grid {
     });
   };
   updateCanvas = () => {
-    this.canvas.width = 200;
+    this.canvas.width = 300;
     this.canvas.height = 200;
   };
 }
@@ -122,6 +158,7 @@ class Block {
     this.setSidesPos();
     this.sprite = new Image();
     this.sprite.src = blockSprite;
+    console.log(this.pos);
   }
   render = () => {
     const { ctx, pos, width, height, sprite } = this;
@@ -143,7 +180,6 @@ class Block {
     );
   };
   clicked = () => {
-    this.pos.x += 50;
-    this.setSidesPos();
+    this.width = 0;
   };
 }
