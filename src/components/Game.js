@@ -18,7 +18,6 @@ function GameComponent() {
 
   const main = () => {
     const game = new Game(gameState);
-    game.run();
   };
 
   return (
@@ -32,10 +31,7 @@ class Game {
   constructor(gameState) {
     this.gameState = gameState;
   }
-  run = () => {
-    this.render();
-  };
-  render = () => {};
+  stage = () => {};
 }
 
 export default GameComponent;
@@ -58,6 +54,7 @@ const GridComponent = (props) => {
     console.log("main");
     const ctx = canvas.getContext("2d");
     const grid = new Grid(gameState, ctx);
+    grid.runCanvasAnimation();
   };
   const styles = {
     top: gameState.grid.pos.x,
@@ -70,37 +67,45 @@ const GridComponent = (props) => {
   );
 };
 class Grid {
+  blocksArray = [];
   constructor(gameState, ctx) {
     this.gameState = gameState;
     this.ctx = ctx;
     this.canvas = ctx.canvas;
     this.updateCanvas();
-    this.render();
+    this.blocksArray.push(new Block(ctx, { x: 10, y: 10 }));
   }
-
+  runCanvasAnimation = () => {
+    this.clear();
+    this.render();
+    requestAnimationFrame(this.runCanvasAnimation);
+  };
+  render = () => {
+    this.blocksArray.forEach((block) => block.render());
+  };
+  clear = () => {
+    const { ctx, canvas } = this;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  };
   updateCanvas = () => {
     this.canvas.width = 200;
     this.canvas.height = 200;
   };
+}
+
+class Block {
+  ctx;
+  pos;
+  constructor(ctx, pos) {
+    this.ctx = ctx;
+    this.pos = pos;
+    this.sprite = new Image();
+    this.sprite.src = blockSprite;
+    this.addEvents();
+  }
   render = () => {
-    this.drawBorder();
-    this.clear();
-    this.drawBlock();
+    const { ctx, pos, sprite } = this;
+    ctx.drawImage(sprite, pos.x, pos.y, 50, 50 * 1.15);
   };
-  clear = () => {
-    const { ctx, canvas } = this;
-    ctx.clearRect(5, 5, canvas.width - 10, canvas.height - 10);
-  };
-  drawBorder = () => {
-    const { ctx, canvas } = this;
-    this.ctx.fillRect(0, 0, canvas.width, canvas.height);
-  };
-  drawBlock = () => {
-    const { grid } = this.gameState;
-    const img = new Image();
-    img.src = blockSprite;
-    img.onload = () => {
-      this.ctx.drawImage(img, 0, 0, 50, 50 * 1.15);
-    };
-  };
+  addEvents = () => {};
 }
