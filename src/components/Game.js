@@ -67,13 +67,18 @@ const GridComponent = (props) => {
   );
 };
 class Grid {
+  pos;
   blocksArray = [];
   constructor(gameState, ctx) {
     this.gameState = gameState;
     this.ctx = ctx;
     this.canvas = ctx.canvas;
     this.updateCanvas();
-    this.blocksArray.push(new Block(ctx, { x: 10, y: 10 }));
+    this.blocksArray.push(
+      new Block(ctx, { x: 30, y: 30 }),
+      new Block(ctx, { x: 130, y: 130 })
+    );
+    this.ctx.canvas.addEventListener("click", this.onClick);
   }
   runCanvasAnimation = () => {
     this.clear();
@@ -87,6 +92,18 @@ class Grid {
     const { ctx, canvas } = this;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
   };
+  onClick = (e) => {
+    const { grid } = this.gameState;
+    this.blocksArray.forEach((block) => {
+      const mousePosOnCanvas = {
+        x: e.clientX - grid.pos.x,
+        y: e.clientY - grid.pos.y,
+      };
+      if (block.isMouseOver(mousePosOnCanvas)) {
+        block.clicked();
+      }
+    });
+  };
   updateCanvas = () => {
     this.canvas.width = 200;
     this.canvas.height = 200;
@@ -96,16 +113,37 @@ class Grid {
 class Block {
   ctx;
   pos;
+  width = 40;
+  height;
   constructor(ctx, pos) {
     this.ctx = ctx;
     this.pos = pos;
+    this.height = this.width * 1.15;
+    this.setSidesPos();
     this.sprite = new Image();
     this.sprite.src = blockSprite;
-    this.addEvents();
   }
   render = () => {
-    const { ctx, pos, sprite } = this;
-    ctx.drawImage(sprite, pos.x, pos.y, 50, 50 * 1.15);
+    const { ctx, pos, width, height, sprite } = this;
+    ctx.drawImage(sprite, pos.left, pos.top, width, height);
   };
-  addEvents = () => {};
+  setSidesPos = () => {
+    const { pos, width, height } = this;
+    pos.left = pos.x - width / 2;
+    pos.top = pos.y - height / 2;
+    pos.right = pos.x + width / 2;
+    pos.bottom = pos.y + height / 2;
+  };
+  isMouseOver = (mousePos) => {
+    return (
+      mousePos.x > this.pos.left &&
+      mousePos.x < this.pos.right &&
+      mousePos.y > this.pos.top &&
+      mousePos.y < this.pos.bottom
+    );
+  };
+  clicked = () => {
+    this.pos.x += 50;
+    this.setSidesPos();
+  };
 }
