@@ -72,7 +72,7 @@ class Grid {
   canvas;
   pos;
   rows = 3;
-  columns = 5;
+  columns = 10;
   cellSize = 40;
   cellWidth;
   cellHeight;
@@ -85,7 +85,7 @@ class Grid {
     this.canvas = ctx.canvas;
     this.cellWidth = this.cellSize;
     this.cellHeight = this.cellSize * 1.1;
-    this.gap = this.cellSize * 0.2;
+    this.gap = this.cellSize * 0.1;
     this.resizeCanvas();
     this.fillblocksToGridArray();
     this.ctx.canvas.addEventListener("click", this.onClick);
@@ -149,6 +149,8 @@ class Block {
   pos;
   width = 40;
   height;
+  sprite;
+  color = "rbg(0,0,0)";
   constructor(ctx, pos) {
     this.ctx = ctx;
     this.pos = pos;
@@ -156,10 +158,49 @@ class Block {
     this.setSidesPos();
     this.sprite = new Image();
     this.sprite.src = blockSprite;
+    this.color = this.getRandomColor();
   }
+  getRandomColor = () => {
+    const cMax = 120;
+    const cMin = 0;
+    const k = 5;
+    const colorList = {
+      1: { r: cMax, g: cMin, b: cMin },
+      // 2: { r: cMax, g: cMax / 2, b: cMin },
+      3: { r: cMax, g: cMax, b: cMin },
+      // 4: { r: cMax / 2, g: cMax, b: cMin },
+      5: { r: cMin, g: cMax, b: cMin },
+      6: { r: cMin, g: cMax, b: cMax / 2 },
+      7: { r: cMin, g: cMax, b: cMax },
+      // 8: { r: cMin, g: cMax / 2, b: cMax },
+      9: { r: cMin, g: cMin, b: cMax },
+      // 10: { r: cMax / 2, g: cMin, b: cMax },
+      11: { r: cMax, g: cMin, b: cMax },
+      // 12: { r: cMax, g: cMin, b: cMax / 2 },
+    };
+    const difficult = {
+      3: [1, 6, 9],
+      4: [1, 5, 9, 11],
+      5: [1, 3, 6, 9, 11],
+      6: [1, 3, 5, 7, 9, 11],
+    };
+    const random = difficult[k][Math.floor(Math.random() * k)];
+    return colorList[random];
+  };
   render = () => {
-    const { ctx, pos, width, height, sprite } = this;
+    this.draw();
+  };
+  draw = () => {
+    const { ctx, pos, width, height, sprite, color } = this;
+    const { r, g, b } = color;
+    ctx.save();
+    ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
     ctx.drawImage(sprite, pos.left, pos.top, width, height);
+    ctx.globalCompositeOperation = "source-atop";
+    ctx.fillRect(pos.left, pos.top, width, height);
+    ctx.globalCompositeOperation = "luminosity";
+    ctx.drawImage(sprite, pos.left, pos.top, width, height);
+    ctx.restore();
   };
   setSidesPos = () => {
     const { pos, width, height } = this;
