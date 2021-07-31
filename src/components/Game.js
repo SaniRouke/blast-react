@@ -83,15 +83,11 @@ class Grid {
     this.pos = gameState.grid.pos;
     this.ctx = ctx;
     this.canvas = ctx.canvas;
-    this.updateCanvas();
     this.cellWidth = this.cellSize;
     this.cellHeight = this.cellSize * 1.1;
     this.gap = this.cellSize * 0.2;
-    this.canvas.width =
-      this.cellWidth * this.columns + this.gap * (this.columns + 1);
-    this.canvas.height =
-      this.cellHeight * this.rows + this.gap * (this.rows + 1);
-    this.fillBlocksArray();
+    this.resizeCanvas();
+    this.fillblocksToGridArray();
     this.ctx.canvas.addEventListener("click", this.onClick);
   }
   runCanvasAnimation = () => {
@@ -100,13 +96,13 @@ class Grid {
     requestAnimationFrame(this.runCanvasAnimation);
   };
   render = () => {
-    this.forEachBlockInArray((block) => block.render());
+    this.forEachBlockInGrid((block) => block.render());
   };
   clear = () => {
     const { ctx, canvas } = this;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
   };
-  fillBlocksArray = () => {
+  fillblocksToGridArray = () => {
     const { ctx, rows, columns, cellWidth, cellHeight, gap } = this;
     for (let i = 0; i < rows; i++) {
       this.blocksArray.push([]);
@@ -120,7 +116,7 @@ class Grid {
       }
     }
   };
-  forEachBlockInArray = (func) => {
+  forEachBlockInGrid = (func) => {
     const { rows, columns } = this;
     for (let i = 0; i < rows; i++) {
       for (let j = 0; j < columns; j++) {
@@ -130,7 +126,7 @@ class Grid {
   };
   onClick = (e) => {
     const { grid } = this.gameState;
-    this.forEachBlockInArray((block) => {
+    this.forEachBlockInGrid((block) => {
       const mousePosOnCanvas = {
         x: e.clientX - grid.pos.x,
         y: e.clientY - grid.pos.y,
@@ -140,9 +136,11 @@ class Grid {
       }
     });
   };
-  updateCanvas = () => {
-    this.canvas.width = 300;
-    this.canvas.height = 200;
+  resizeCanvas = () => {
+    this.canvas.width =
+      this.cellWidth * this.columns + this.gap * (this.columns + 1);
+    this.canvas.height =
+      this.cellHeight * this.rows + this.gap * (this.rows + 1);
   };
 }
 
@@ -158,7 +156,6 @@ class Block {
     this.setSidesPos();
     this.sprite = new Image();
     this.sprite.src = blockSprite;
-    console.log(this.pos);
   }
   render = () => {
     const { ctx, pos, width, height, sprite } = this;
