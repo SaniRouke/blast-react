@@ -109,6 +109,8 @@ class Grid {
       for (let j = 0; j < columns; j++) {
         this.blocksArray[i].push(
           new Block(ctx, {
+            row: i,
+            column: j,
             x: j * (cellWidth + gap) + cellWidth / 2 + gap,
             y: i * (cellHeight + gap) + cellHeight / 2 + gap,
           })
@@ -124,6 +126,37 @@ class Grid {
       }
     }
   };
+  getNeighbors = (currentBlock) => {
+    const { blocksArray } = this;
+    const { row, column } = currentBlock.pos;
+    const neighbors = [];
+    if (blocksArray[row][column - 1]) {
+      neighbors.push(blocksArray[row][column - 1]);
+    }
+    if (blocksArray[row][column + 1]) {
+      neighbors.push(blocksArray[row][column + 1]);
+    }
+    if (blocksArray[row - 1] && blocksArray[row - 1][column]) {
+      neighbors.push(blocksArray[row - 1][column]);
+    }
+    if (blocksArray[row + 1] && blocksArray[row + 1][column]) {
+      neighbors.push(blocksArray[row + 1][column]);
+    }
+    return neighbors;
+  };
+  destroy = (block) => {
+    const neighbors = this.getNeighbors(block);
+    neighbors.forEach((n) => {
+      if (n.color.name === block.color.name) {
+        if (!block.isAlive) {
+          block.die();
+        }
+        if (!n.isAlive) {
+          this.destroy(n);
+        }
+      }
+    });
+  };
   onClick = (e) => {
     const { grid } = this.gameState;
     this.forEachBlockInGrid((block) => {
@@ -132,7 +165,7 @@ class Grid {
         y: e.clientY - grid.pos.y,
       };
       if (block.isMouseOver(mousePosOnCanvas)) {
-        block.clicked();
+        this.destroy(block);
       }
     });
   };
@@ -151,6 +184,7 @@ class Block {
   height;
   sprite;
   color = "rbg(0,0,0)";
+  isAlive = false;
   constructor(ctx, pos) {
     this.ctx = ctx;
     this.pos = pos;
@@ -163,25 +197,25 @@ class Block {
   getRandomColor = () => {
     const cMax = 120;
     const cMin = 0;
-    const k = 5;
+    const k = 3;
     const colorList = {
-      1: { r: cMax, g: cMin, b: cMin },
+      1: { name: "red", r: cMax, g: cMin, b: cMin },
       // 2: { r: cMax, g: cMax / 2, b: cMin },
-      3: { r: cMax, g: cMax, b: cMin },
+      3: { name: "yellow", r: cMax, g: cMax, b: cMin },
       // 4: { r: cMax / 2, g: cMax, b: cMin },
-      5: { r: cMin, g: cMax, b: cMin },
-      6: { r: cMin, g: cMax, b: cMax / 2 },
-      7: { r: cMin, g: cMax, b: cMax },
+      5: { name: "green", r: cMin, g: cMax, b: cMin },
+      // 6: { name: "green", r: cMin, g: cMax, b: cMax / 2 },
+      7: { name: "cadetblue", r: cMin, g: cMax, b: cMax },
       // 8: { r: cMin, g: cMax / 2, b: cMax },
-      9: { r: cMin, g: cMin, b: cMax },
+      9: { name: "blue", r: cMin, g: cMin, b: cMax },
       // 10: { r: cMax / 2, g: cMin, b: cMax },
-      11: { r: cMax, g: cMin, b: cMax },
+      11: { name: "purple", r: cMax, g: cMin, b: cMax },
       // 12: { r: cMax, g: cMin, b: cMax / 2 },
     };
     const difficult = {
-      3: [1, 6, 9],
+      3: [1, 5, 9],
       4: [1, 5, 9, 11],
-      5: [1, 3, 6, 9, 11],
+      5: [1, 3, 5, 9, 11],
       6: [1, 3, 5, 7, 9, 11],
     };
     const random = difficult[k][Math.floor(Math.random() * k)];
@@ -217,7 +251,8 @@ class Block {
       mousePos.y < this.pos.bottom
     );
   };
-  clicked = () => {
+  die = () => {
     this.width = 0;
+    this.isAlive = true;
   };
 }
