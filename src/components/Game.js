@@ -92,6 +92,7 @@ class Grid {
   }
   runCanvasAnimation = () => {
     this.clear();
+    this.updateBlocks();
     this.render();
     requestAnimationFrame(this.runCanvasAnimation);
   };
@@ -118,13 +119,22 @@ class Grid {
       }
     }
   };
+  updateBlocks = () => {
+    this.blocksArray = this.blocksArray.map((row) =>
+      row.map((block) => {
+        if (!block.isAlive) {
+          return new Block(this.ctx, block.pos);
+        }
+        return block;
+      })
+    );
+  };
   forEachBlockInGrid = (func) => {
-    const { rows, columns } = this;
-    for (let i = 0; i < rows; i++) {
-      for (let j = 0; j < columns; j++) {
-        func(this.blocksArray[i][j]);
-      }
-    }
+    this.blocksArray.forEach((row) => {
+      row.forEach((block) => {
+        func(block);
+      });
+    });
   };
   getNeighbors = (currentBlock) => {
     const { blocksArray } = this;
@@ -148,10 +158,10 @@ class Grid {
     const neighbors = this.getNeighbors(block);
     neighbors.forEach((n) => {
       if (n.color.name === block.color.name) {
-        if (!block.isAlive) {
+        if (block.isAlive) {
           block.die();
         }
-        if (!n.isAlive) {
+        if (n.isAlive) {
           this.destroy(n);
         }
       }
@@ -184,7 +194,7 @@ class Block {
   height;
   sprite;
   color = "rbg(0,0,0)";
-  isAlive = false;
+  isAlive = true;
   constructor(ctx, pos) {
     this.ctx = ctx;
     this.pos = pos;
@@ -253,6 +263,6 @@ class Block {
   };
   die = () => {
     this.width = 0;
-    this.isAlive = true;
+    this.isAlive = false;
   };
 }
