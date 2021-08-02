@@ -71,32 +71,33 @@ class Grid {
   ctx;
   canvas;
   pos;
-  rows = 3;
+  rows = 10;
   columns = 10;
-  cellSize = 40;
-  cellWidth;
-  cellHeight;
-  gap;
+  sprite = {
+    src: blockSprite,
+    width: 40,
+  };
   blocksArray = [];
   constructor(gameState, ctx) {
     this.gameState = gameState;
     this.pos = gameState.grid.pos;
     this.ctx = ctx;
     this.canvas = ctx.canvas;
-    this.cellWidth = this.cellSize;
-    this.cellHeight = this.cellSize * 1.1;
-    this.gap = this.cellSize * 0.1;
+    this.sprite.height = this.sprite.width * 1.15;
+    this.sprite.gap = this.sprite.width * 0.1;
     this.resizeCanvas();
     this.fillblocksToGridArray();
     this.ctx.canvas.addEventListener("click", this.onClick);
   }
+
   runCanvasAnimation = () => {
-    this.clear();
     this.updateBlocks();
+    // this.animation();
     this.render();
     requestAnimationFrame(this.runCanvasAnimation);
   };
   render = () => {
+    this.clear();
     this.forEachBlockInGrid((block) => block.render());
   };
   clear = () => {
@@ -104,18 +105,11 @@ class Grid {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
   };
   fillblocksToGridArray = () => {
-    const { ctx, rows, columns, cellWidth, cellHeight, gap } = this;
+    const { rows, columns } = this;
     for (let i = 0; i < rows; i++) {
       this.blocksArray.push([]);
       for (let j = 0; j < columns; j++) {
-        this.blocksArray[i].push(
-          new Block(ctx, {
-            row: i,
-            column: j,
-            x: j * (cellWidth + gap) + cellWidth / 2 + gap,
-            y: i * (cellHeight + gap) + cellHeight / 2 + gap,
-          })
-        );
+        this.blocksArray[i].push(this.getNewBlock(i, j));
       }
     }
   };
@@ -123,11 +117,15 @@ class Grid {
     this.blocksArray = this.blocksArray.map((row) =>
       row.map((block) => {
         if (!block.isAlive) {
-          return new Block(this.ctx, block.pos);
+          return block;
         }
         return block;
       })
     );
+  };
+  getNewBlock = (row, column) => {
+    const { ctx, sprite } = this;
+    return new Block(ctx, { row, column, ...sprite });
   };
   forEachBlockInGrid = (func) => {
     this.blocksArray.forEach((row) => {
@@ -167,6 +165,19 @@ class Grid {
       }
     });
   };
+  animation = () => {
+    this.forEachBlockInGrid((block) => {
+      block.setSidesPos();
+      if (block.pos.outY < 0) {
+        block.pos.outY += block.vY;
+        block.vY *= 1.1;
+        block.pos.top += block.pos.outY;
+      }
+    });
+  };
+  startAnimation = () => {
+    console.log("start");
+  };
   onClick = (e) => {
     const { grid } = this.gameState;
     this.forEachBlockInGrid((block) => {
@@ -178,32 +189,46 @@ class Grid {
         this.destroy(block);
       }
     });
+    this.startAnimation();
   };
   resizeCanvas = () => {
     this.canvas.width =
-      this.cellWidth * this.columns + this.gap * (this.columns + 1);
+      this.sprite.width * this.columns + this.sprite.gap * (this.columns + 1);
     this.canvas.height =
-      this.cellHeight * this.rows + this.gap * (this.rows + 1);
+      this.sprite.height * this.rows + this.sprite.gap * (this.rows + 1);
   };
 }
 
 class Block {
   ctx;
-  pos;
-  width = 40;
+  pos = {};
+  sprite;
+  width;
   height;
   sprite;
+  gap;
   color = "rbg(0,0,0)";
   isAlive = true;
-  constructor(ctx, pos) {
+  vY = 3;
+  constructor(ctx, props) {
     this.ctx = ctx;
-    this.pos = pos;
-    this.height = this.width * 1.15;
-    this.setSidesPos();
-    this.sprite = new Image();
-    this.sprite.src = blockSprite;
-    this.color = this.getRandomColor();
+    this.setProps(props);
+    this.pos.outY = -this.pos.bottom;
   }
+  setProps = (props) => {
+    const { row, column, src, width, height, gap } = props;
+    this.pos.row = row;
+    this.pos.column = column;
+    this.sprite = new Image();
+    this.sprite.src = src;
+    this.width = width;
+    this.height = height;
+    this.gap = gap;
+    this.pos.x = column * (this.width + gap) + this.width / 2 + gap;
+    this.pos.y = row * (this.height + gap) + this.height / 2 + gap;
+    this.setSidesPos();
+    this.color = this.getRandomColor();
+  };
   getRandomColor = () => {
     const cMax = 120;
     const cMin = 0;
