@@ -91,7 +91,6 @@ class Grid {
   }
 
   runCanvasAnimation = () => {
-    this.updateBlocks();
     // this.animation();
     this.render();
     requestAnimationFrame(this.runCanvasAnimation);
@@ -112,16 +111,6 @@ class Grid {
         this.blocksArray[i].push(this.getNewBlock(i, j));
       }
     }
-  };
-  updateBlocks = () => {
-    this.blocksArray = this.blocksArray.map((row) =>
-      row.map((block) => {
-        if (!block.isAlive) {
-          return block;
-        }
-        return block;
-      })
-    );
   };
   getNewBlock = (row, column) => {
     const { ctx, sprite } = this;
@@ -189,7 +178,35 @@ class Grid {
         this.destroy(block);
       }
     });
+    this.updateBlock();
     this.startAnimation();
+  };
+  updateBlock = () => {
+    for (let i = 0; i < this.columns; i++) {
+      this.updateNthColumn(i);
+    }
+  };
+  updateNthColumn = (arrayColumn) => {
+    const fc = [];
+    let count = 0;
+    this.forEachBlockInGrid((block) => {
+      if (block.pos.column === arrayColumn) {
+        if (!block.isAlive) {
+          count++;
+          return;
+        }
+        fc.push(block);
+      }
+    });
+    for (let i = 0; i < count; i++) {
+      fc.unshift(this.getNewBlock(i, arrayColumn));
+    }
+    for (let i = 0; i < this.rows; i++) {
+      if (this.blocksArray[i][arrayColumn].pos.column === arrayColumn) {
+        fc[i].pos.row = i;
+        this.blocksArray[i][arrayColumn] = fc[i];
+      }
+    }
   };
   resizeCanvas = () => {
     this.canvas.width =
@@ -224,15 +241,46 @@ class Block {
     this.width = width;
     this.height = height;
     this.gap = gap;
-    this.pos.x = column * (this.width + gap) + this.width / 2 + gap;
-    this.pos.y = row * (this.height + gap) + this.height / 2 + gap;
-    this.setSidesPos();
     this.color = this.getRandomColor();
+  };
+  updatePos = () => {
+    const { pos, width, height, gap } = this;
+    pos.x = pos.column * (width + gap) + width / 2 + gap;
+    pos.y = pos.row * (height + gap) + height / 2 + gap;
+    pos.left = pos.x - width / 2;
+    pos.top = pos.y - height / 2;
+    pos.right = pos.x + width / 2;
+    pos.bottom = pos.y + height / 2;
+  };
+  render = () => {
+    this.updatePos();
+    this.draw();
+  };
+  draw = () => {
+    const { ctx, pos, width, height, sprite, color } = this;
+    const { r, g, b } = color;
+    ctx.save();
+    ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+    ctx.drawImage(sprite, pos.left, pos.top, width, height);
+    ctx.globalCompositeOperation = "source-atop";
+    ctx.fillRect(pos.left, pos.top, width, height);
+    ctx.globalCompositeOperation = "luminosity";
+    ctx.drawImage(sprite, pos.left, pos.top, width, height);
+    ctx.restore();
+  };
+
+  isMouseOver = (mousePos) => {
+    return (
+      mousePos.x > this.pos.left &&
+      mousePos.x < this.pos.right &&
+      mousePos.y > this.pos.top &&
+      mousePos.y < this.pos.bottom
+    );
   };
   getRandomColor = () => {
     const cMax = 120;
     const cMin = 0;
-    const k = 3;
+    const k = 6;
     const colorList = {
       1: { name: "red", r: cMax, g: cMin, b: cMin },
       // 2: { r: cMax, g: cMax / 2, b: cMin },
@@ -256,38 +304,7 @@ class Block {
     const random = difficult[k][Math.floor(Math.random() * k)];
     return colorList[random];
   };
-  render = () => {
-    this.draw();
-  };
-  draw = () => {
-    const { ctx, pos, width, height, sprite, color } = this;
-    const { r, g, b } = color;
-    ctx.save();
-    ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
-    ctx.drawImage(sprite, pos.left, pos.top, width, height);
-    ctx.globalCompositeOperation = "source-atop";
-    ctx.fillRect(pos.left, pos.top, width, height);
-    ctx.globalCompositeOperation = "luminosity";
-    ctx.drawImage(sprite, pos.left, pos.top, width, height);
-    ctx.restore();
-  };
-  setSidesPos = () => {
-    const { pos, width, height } = this;
-    pos.left = pos.x - width / 2;
-    pos.top = pos.y - height / 2;
-    pos.right = pos.x + width / 2;
-    pos.bottom = pos.y + height / 2;
-  };
-  isMouseOver = (mousePos) => {
-    return (
-      mousePos.x > this.pos.left &&
-      mousePos.x < this.pos.right &&
-      mousePos.y > this.pos.top &&
-      mousePos.y < this.pos.bottom
-    );
-  };
   die = () => {
-    this.width = 0;
     this.isAlive = false;
   };
 }
