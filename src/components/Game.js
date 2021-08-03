@@ -91,7 +91,7 @@ class Grid {
   }
 
   runCanvasAnimation = () => {
-    // this.animation();
+    this.animation();
     this.render();
     requestAnimationFrame(this.runCanvasAnimation);
   };
@@ -156,11 +156,12 @@ class Grid {
   };
   animation = () => {
     this.forEachBlockInGrid((block) => {
-      block.setSidesPos();
       if (block.pos.outY < 0) {
-        block.pos.outY += block.vY;
+        block.pos.outY += block.vY / 2;
         block.vY *= 1.1;
         block.pos.top += block.pos.outY;
+      } else {
+        block.pos.outY = 0;
       }
     });
   };
@@ -202,9 +203,13 @@ class Grid {
       fc.unshift(this.getNewBlock(i, arrayColumn));
     }
     for (let i = 0; i < this.rows; i++) {
+      const oldBlock = fc[i];
       if (this.blocksArray[i][arrayColumn].pos.column === arrayColumn) {
-        fc[i].pos.row = i;
-        this.blocksArray[i][arrayColumn] = fc[i];
+        if (oldBlock.pos.row !== i) {
+          oldBlock.pos.outY = (-oldBlock.height - oldBlock.gap) * count;
+        }
+        oldBlock.pos.row = i;
+        this.blocksArray[i][arrayColumn] = oldBlock;
       }
     }
   };
@@ -230,7 +235,9 @@ class Block {
   constructor(ctx, props) {
     this.ctx = ctx;
     this.setProps(props);
-    this.pos.outY = -this.pos.bottom;
+    this.updatePos();
+    this.pos.outY =
+      -this.height - this.gap - (-this.height - this.gap) * this.pos.row;
   }
   setProps = (props) => {
     const { row, column, src, width, height, gap } = props;
@@ -259,6 +266,7 @@ class Block {
   draw = () => {
     const { ctx, pos, width, height, sprite, color } = this;
     const { r, g, b } = color;
+    pos.top += pos.outY;
     ctx.save();
     ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
     ctx.drawImage(sprite, pos.left, pos.top, width, height);
@@ -280,7 +288,7 @@ class Block {
   getRandomColor = () => {
     const cMax = 120;
     const cMin = 0;
-    const k = 6;
+    const k = 3;
     const colorList = {
       1: { name: "red", r: cMax, g: cMin, b: cMin },
       // 2: { r: cMax, g: cMax / 2, b: cMin },
