@@ -83,6 +83,7 @@ class Grid {
     this.pos = gameState.grid.pos;
     this.ctx = ctx;
     this.canvas = ctx.canvas;
+    this.rows += 1;
     this.sprite.height = this.sprite.width * 1.15;
     this.sprite.gap = this.sprite.width * 0.1;
     this.resizeCanvas();
@@ -133,7 +134,7 @@ class Grid {
     if (blocksArray[row][column + 1]) {
       neighbors.push(blocksArray[row][column + 1]);
     }
-    if (blocksArray[row - 1] && blocksArray[row - 1][column]) {
+    if (blocksArray[row - 1] && blocksArray[row - 1][column] && row - 1 !== 0) {
       neighbors.push(blocksArray[row - 1][column]);
     }
     if (blocksArray[row + 1] && blocksArray[row + 1][column]) {
@@ -180,7 +181,9 @@ class Grid {
         this.destroy(block);
       }
     });
-    this.updateBlock();
+    setTimeout(() => {
+      this.updateBlock();
+    }, 300);
     this.startAnimation();
   };
   updateBlock = () => {
@@ -193,8 +196,8 @@ class Grid {
     this.forEachBlockInGrid((block) => {
       if (block.pos.column === colNum) {
         if (!block.isAlive) {
+          this.isAnimate = false;
           const newBlock = this.getNewBlock(0, colNum);
-          newBlock.color = { name: "grey", r: 0, g: 0, b: 0 };
           currentColumnArray.unshift(newBlock);
         } else {
           currentColumnArray.push(block);
@@ -204,7 +207,7 @@ class Grid {
     currentColumnArray.forEach((block, i) => {
       const oldRow = block.pos.row;
       block.pos.row = i;
-      block.pos.outY = -50 * (i - oldRow);
+      block.pos.outY = -(block.height - block.gap) * (i - oldRow);
       this.blocksArray[i][colNum] = block;
     });
   };
@@ -212,7 +215,7 @@ class Grid {
     this.canvas.width =
       this.sprite.width * this.columns + this.sprite.gap * (this.columns + 1);
     this.canvas.height =
-      this.sprite.height * this.rows + this.sprite.gap * (this.rows + 1);
+      this.sprite.height * (this.rows - 1) + this.sprite.gap * (this.rows + 1);
   };
 }
 
@@ -226,6 +229,7 @@ class Block {
   gap;
   color = "rbg(0,0,0)";
   isAlive = true;
+  isAnimate = false;
   vY = 3;
   constructor(ctx, props) {
     this.ctx = ctx;
@@ -246,7 +250,7 @@ class Block {
   updatePos = () => {
     const { pos, width, height, gap } = this;
     pos.x = pos.column * (width + gap) + width / 2 + gap;
-    pos.y = pos.row * (height + gap) + height / 2 + gap;
+    pos.y = (pos.row - 1) * (height + gap) + height / 2 + gap;
     pos.left = pos.x - width / 2;
     pos.top = pos.y - height / 2;
     pos.right = pos.x + width / 2;
@@ -268,8 +272,16 @@ class Block {
     ctx.globalCompositeOperation = "luminosity";
     ctx.drawImage(sprite, pos.left, pos.top, width, height);
     ctx.restore();
+    if (this.isAnimate) {
+      this.deathAnimation();
+    }
   };
-
+  deathAnimation = () => {
+    let k = 1.1;
+    this.color.r /= k;
+    this.color.g /= k;
+    this.color.b /= k;
+  };
   isMouseOver = (mousePos) => {
     return (
       mousePos.x > this.pos.left &&
@@ -307,5 +319,6 @@ class Block {
   };
   die = () => {
     this.isAlive = false;
+    this.isAnimate = true;
   };
 }
