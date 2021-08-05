@@ -158,10 +158,11 @@ class Grid {
     this.forEachBlockInGrid((block) => {
       if (block.pos.outY < 0) {
         block.pos.outY += block.vY / 2;
-        block.vY *= 1.1;
+        block.vY *= 1.08;
         block.pos.top += block.pos.outY;
       } else {
         block.pos.outY = 0;
+        block.vY = 3;
       }
     });
   };
@@ -187,31 +188,25 @@ class Grid {
       this.updateNthColumn(i);
     }
   };
-  updateNthColumn = (arrayColumn) => {
-    const fc = [];
-    let count = 0;
+  updateNthColumn = (colNum) => {
+    const currentColumnArray = [];
     this.forEachBlockInGrid((block) => {
-      if (block.pos.column === arrayColumn) {
+      if (block.pos.column === colNum) {
         if (!block.isAlive) {
-          count++;
-          return;
+          const newBlock = this.getNewBlock(0, colNum);
+          newBlock.color = { name: "grey", r: 0, g: 0, b: 0 };
+          currentColumnArray.unshift(newBlock);
+        } else {
+          currentColumnArray.push(block);
         }
-        fc.push(block);
       }
     });
-    for (let i = 0; i < count; i++) {
-      fc.unshift(this.getNewBlock(i, arrayColumn));
-    }
-    for (let i = 0; i < this.rows; i++) {
-      const oldBlock = fc[i];
-      if (this.blocksArray[i][arrayColumn].pos.column === arrayColumn) {
-        if (oldBlock.pos.row !== i) {
-          oldBlock.pos.outY = (-oldBlock.height - oldBlock.gap) * count;
-        }
-        oldBlock.pos.row = i;
-        this.blocksArray[i][arrayColumn] = oldBlock;
-      }
-    }
+    currentColumnArray.forEach((block, i) => {
+      const oldRow = block.pos.row;
+      block.pos.row = i;
+      block.pos.outY = -50 * (i - oldRow);
+      this.blocksArray[i][colNum] = block;
+    });
   };
   resizeCanvas = () => {
     this.canvas.width =
@@ -236,8 +231,6 @@ class Block {
     this.ctx = ctx;
     this.setProps(props);
     this.updatePos();
-    this.pos.outY =
-      -this.height - this.gap - (-this.height - this.gap) * this.pos.row;
   }
   setProps = (props) => {
     const { row, column, src, width, height, gap } = props;
