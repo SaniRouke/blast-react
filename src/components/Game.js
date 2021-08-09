@@ -62,6 +62,9 @@ const GridComponent = (props) => {
   };
   return (
     <div id="Grid" style={styles}>
+      <div className="Grid__border-out">
+        <div className="Grid__border-in"></div>
+      </div>
       <canvas id="canvas"></canvas>
     </div>
   );
@@ -209,8 +212,10 @@ class Grid {
   resizeCanvas = () => {
     this.canvas.width =
       this.sprite.width * this.columns + this.sprite.gap * (this.columns + 1);
+    // добавление лишней строки для анимации по лучше
     this.canvas.height =
-      this.sprite.height * (this.rows - 1) + this.sprite.gap * (this.rows + 1);
+      this.sprite.height * (this.rows - 1) +
+      this.sprite.gap * (this.rows + 1 - 1);
   };
 }
 
