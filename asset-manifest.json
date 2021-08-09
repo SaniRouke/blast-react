@@ -1,0 +1,22 @@
+{
+  "files": {
+    "main.css": "/blast-react/static/css/main.cbd02f62.chunk.css",
+    "main.js": "/blast-react/static/js/main.228c3eb8.chunk.js",
+    "main.js.map": "/blast-react/static/js/main.228c3eb8.chunk.js.map",
+    "runtime-main.js": "/blast-react/static/js/runtime-main.845013bb.js",
+    "runtime-main.js.map": "/blast-react/static/js/runtime-main.845013bb.js.map",
+    "static/js/2.642c7caa.chunk.js": "/blast-react/static/js/2.642c7caa.chunk.js",
+    "static/js/2.642c7caa.chunk.js.map": "/blast-react/static/js/2.642c7caa.chunk.js.map",
+    "static/js/3.48e05933.chunk.js": "/blast-react/static/js/3.48e05933.chunk.js",
+    "static/js/3.48e05933.chunk.js.map": "/blast-react/static/js/3.48e05933.chunk.js.map",
+    "index.html": "/blast-react/index.html",
+    "static/css/main.cbd02f62.chunk.css.map": "/blast-react/static/css/main.cbd02f62.chunk.css.map",
+    "static/js/2.642c7caa.chunk.js.LICENSE.txt": "/blast-react/static/js/2.642c7caa.chunk.js.LICENSE.txt"
+  },
+  "entrypoints": [
+    "static/js/runtime-main.845013bb.js",
+    "static/js/2.642c7caa.chunk.js",
+    "static/css/main.cbd02f62.chunk.css",
+    "static/js/main.228c3eb8.chunk.js"
+  ]
+}
